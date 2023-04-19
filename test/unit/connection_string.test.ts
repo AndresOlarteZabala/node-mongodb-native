@@ -14,6 +14,7 @@ import {
   MongoOptions,
   MongoParseError,
   MongoRuntimeError,
+  OPTIONS,
   parseOptions,
   resolveSRVRecord
 } from '../mongodb';
@@ -561,9 +562,10 @@ describe('Connection String', function () {
 
   describe('feature flags', () => {
     it('should be stored in the FEATURE_FLAGS Set', () => {
-      expect(FEATURE_FLAGS.size).to.equal(2);
+      expect(FEATURE_FLAGS.size).to.equal(3);
       expect(FEATURE_FLAGS.has(Symbol.for('@@mdb.skipPingOnConnect'))).to.be.true;
       expect(FEATURE_FLAGS.has(Symbol.for('@@mdb.enableMongoLogger'))).to.be.true;
+      expect(FEATURE_FLAGS.has(Symbol.for('@@mdb.internalLoggerConfig'))).to.be.true;
       // Add more flags here
     });
 
@@ -639,6 +641,38 @@ describe('Connection String', function () {
         { host: '::1', port: 27019, isIPv6: true, socketPath: undefined },
         { host: '::1', port: 27020, isIPv6: true, socketPath: undefined }
       ]);
+    });
+  });
+
+  context('default deprecated values', () => {
+    afterEach(() => sinon.restore());
+    before('ensure that `keepAlive` is deprecated', () => {
+      const { deprecated } = OPTIONS.keepAlive;
+      expect(deprecated).to.exist;
+    });
+    context('when no value is provided', () => {
+      it('uses the default value', () => {
+        const options = parseOptions('mongodb://localhost:27017');
+        expect(options).to.have.property('keepAlive', true);
+      });
+      it('does not emit a deprecation warning', async () => {
+        const spy = sinon.spy(process, 'emitWarning');
+        parseOptions('mongodb://localhost:27017');
+        expect(spy.called).to.be.false;
+      });
+    });
+
+    context('when a value is provided', () => {
+      it('uses the provided value', () => {
+        const options = parseOptions('mongodb://localhost:27017?keepAlive=false');
+        expect(options).to.have.property('keepAlive', false);
+      });
+      it('emits a deprecation warning', async () => {
+        const spy = sinon.spy(process, 'emitWarning');
+        parseOptions('mongodb://localhost:27017?keepAlive=false');
+        expect(spy.called, 'expected a warning to be emitted, but none was').to.be.true;
+        expect(spy.getCalls()[0].args[0]).to.match(/keepAlive is a deprecated option/);
+      });
     });
   });
 });
