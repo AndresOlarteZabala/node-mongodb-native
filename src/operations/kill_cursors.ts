@@ -11,14 +11,19 @@ import { AbstractOperation, Aspect, defineAspects, OperationOptions } from './op
  */
 interface KillCursorsCommand {
   killCursors: string;
-  cursors: Long[];
+  cursors: (Long | bigint)[];
   comment?: unknown;
 }
 
 export class KillCursorsOperation extends AbstractOperation {
-  cursorId: Long;
+  cursorId: Long | bigint;
 
-  constructor(cursorId: Long, ns: MongoDBNamespace, server: Server, options: OperationOptions) {
+  constructor(
+    cursorId: Long | bigint,
+    ns: MongoDBNamespace,
+    server: Server,
+    options: OperationOptions
+  ) {
     super(options);
     this.ns = ns;
     this.cursorId = cursorId;

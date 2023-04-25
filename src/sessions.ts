@@ -6,6 +6,7 @@ import { ConnectionPoolMetrics } from './cmap/metrics';
 import { isSharded } from './cmap/wire_protocol/shared';
 import { PINNED, UNPINNED } from './constants';
 import type { AbstractCursor } from './cursor/abstract_cursor';
+import type { RunCommandCursor } from './cursor/run_command_cursor';
 import {
   AnyError,
   MongoAPIError,
@@ -53,7 +54,7 @@ export interface ClientSessionOptions {
   defaultTransactionOptions?: TransactionOptions;
 
   /** @internal */
-  owner?: symbol | AbstractCursor;
+  owner?: symbol | AbstractCursor | RunCommandCursor;
   /** @internal */
   explicit?: boolean;
   /** @internal */
@@ -108,7 +109,7 @@ export class ClientSession extends TypedEventEmitter<ClientSessionEvents> {
   operationTime?: Timestamp;
   explicit: boolean;
   /** @internal */
-  owner?: symbol | AbstractCursor;
+  owner?: symbol | AbstractCursor | RunCommandCursor;
   defaultTransactionOptions: TransactionOptions;
   transaction: Transaction;
   /** @internal */

@@ -645,6 +645,43 @@ operations.set('runCommand', async ({ entities, operation }: OperationFunctionPa
   return db.command(command, options);
 });
 
+operations.set('runCursorCommand', async ({ entities, operation }: OperationFunctionParams) => {
+  const db = entities.getEntity('db', operation.object);
+  const { command, ...opts } = operation.arguments!;
+  const cursor = db.runCursorCommand(command, {
+    readPreference: ReadPreference.fromOptions(opts),
+    session: opts.session
+  });
+
+  if (!Number.isNaN(+opts.batchSize)) cursor.batchSize = +opts.batchSize;
+  if (!Number.isNaN(+opts.maxTimeMS)) cursor.maxTimeMS = +opts.maxTimeMS;
+  if (opts.comment !== undefined) cursor.comment = opts.comment;
+
+  return cursor.toArray();
+});
+
+operations.set(
+  'createRunCursorCommand',
+  async ({ entities, operation }: OperationFunctionParams) => {
+    const collection = entities.getEntity('db', operation.object);
+    const { command, ...opts } = operation.arguments!;
+    const cursor = collection.runCursorCommand(command, {
+      readPreference: ReadPreference.fromOptions(opts),
+      session: opts.session
+    });
+
+    if (!Number.isNaN(+opts.batchSize)) cursor.batchSize = +opts.batchSize;
+    if (!Number.isNaN(+opts.maxTimeMS)) cursor.maxTimeMS = +opts.maxTimeMS;
+    if (opts.comment !== undefined) cursor.comment = opts.comment;
+
+    // The spec dictates that we create the cursor and force the find command
+    // to execute, but don't move the cursor forward. hasNext() accomplishes
+    // this.
+    await cursor.start();
+    return cursor;
+  }
+);
+
 operations.set('updateMany', async ({ entities, operation }) => {
   const collection = entities.getEntity('collection', operation.object);
   const { filter, update, ...options } = operation.arguments!;

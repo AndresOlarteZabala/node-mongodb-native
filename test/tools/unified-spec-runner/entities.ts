@@ -30,6 +30,7 @@ import {
   MongoCredentials,
   ReadConcern,
   ReadPreference,
+  RunCommandCursor,
   SENSITIVE_COMMANDS,
   ServerDescriptionChangedEvent,
   TopologyDescription,
@@ -441,6 +442,9 @@ export class EntitiesMap<E = Entity> extends Map<string, E> {
       throw new Error(`Unknown type ${type}`);
     }
     if (!(entity instanceof ctor)) {
+      if (type === 'cursor' && entity instanceof RunCommandCursor) {
+        return entity;
+      }
       throw new Error(`${key} is not an instance of ${type}`);
     }
     return entity;

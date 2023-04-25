@@ -26,7 +26,7 @@ export interface GetMoreOptions extends OperationOptions {
  * @internal
  */
 export interface GetMoreCommand {
-  getMore: Long;
+  getMore: Long | bigint;
   collection: string;
   batchSize?: number;
   maxTimeMS?: number;
@@ -36,10 +36,15 @@ export interface GetMoreCommand {
 
 /** @internal */
 export class GetMoreOperation extends AbstractOperation {
-  cursorId: Long;
+  cursorId: Long | bigint;
   override options: GetMoreOptions;
 
-  constructor(ns: MongoDBNamespace, cursorId: Long, server: Server, options: GetMoreOptions) {
+  constructor(
+    ns: MongoDBNamespace,
+    cursorId: Long | bigint,
+    server: Server,
+    options: GetMoreOptions
+  ) {
     super(options);
 
     this.options = options;
@@ -63,7 +68,11 @@ export class GetMoreOperation extends AbstractOperation {
       );
     }
 
-    if (this.cursorId == null || this.cursorId.isZero()) {
+    if (
+      this.cursorId == null ||
+      this.cursorId === 0n ||
+      (typeof this.cursorId === 'object' && this.cursorId.isZero())
+    ) {
       return callback(new MongoRuntimeError('Unable to iterate cursor with no id'));
     }
 
