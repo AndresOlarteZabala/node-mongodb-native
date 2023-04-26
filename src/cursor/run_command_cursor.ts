@@ -198,11 +198,7 @@ export class RunCommandCursor {
 
     const result = await this.asyncIterator.next();
 
-    if (result.done) {
-      return null;
-    }
-
-    return result.value;
+    return result.done ? null : result.value;
   }
 
   async toArray() {
