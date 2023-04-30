@@ -47,7 +47,7 @@ export class AddUserOperation extends CommandOperation<Document> {
     this.db = db;
     this.username = username;
     this.password = password;
-    this.options = options ?? {};
+    this.options = options || {};
   }
 
   override execute(
